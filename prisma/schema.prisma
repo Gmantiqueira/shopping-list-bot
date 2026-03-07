@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Item {
+  id        String   @id @default(uuid())
+  groupId   String
+  name      String
+  quantity  Int      @default(1)
+  unit      String   @default("un")
+  status    String   // 'pending' | 'bought'
+  createdBy String
+  createdAt DateTime @default(now())
+  boughtBy  String?
+  boughtAt  DateTime?
+
+  @@index([groupId])
+  @@index([groupId, name])
+}
+
+model MessageParseEvent {
+  id             String   @id @default(cuid())
+  groupId        String
+  userId         String
+  rawText        String
+  ruleItemsJson  String?
+  llmItemsJson   String?
+  finalItemsJson String?
+  usedLlm        Boolean  @default(false)
+  confidence     Float?
+  status         String   // 'accepted' | 'ignored' | 'failed'
+  createdAt      DateTime @default(now())
+
+  @@index([groupId])
+  @@index([createdAt])
+}
+
+model ItemFeedback {
+  id               String   @id @default(cuid())
+  parseEventId     String?
+  groupId          String
+  userId           String
+  rawText          String
+  wrongItemsJson   String?
+  correctItemsJson String?
+  feedbackType     String   // 'replace' | 'remove_false_positive' | 'add_missing_item' | 'alias_manual'
+  createdAt        DateTime @default(now())
+
+  @@index([groupId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model GroupItemAlias {
+  id            String   @id @default(cuid())
+  groupId       String
+  rawTerm       String
+  canonicalItem String
+  source        String   // 'manual' | 'feedback' | 'auto_promoted'
+  usageCount    Int      @default(1)
+  lastSeenAt    DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([groupId, rawTerm])
+  @@index([groupId])
+  @@index([groupId, rawTerm])
+}
