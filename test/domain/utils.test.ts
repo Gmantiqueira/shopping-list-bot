@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeItemName } from '../../src/domain/utils.js';
+import { normalizeItemName, normalizePhone } from '../../src/domain/utils.js';
 
 describe('normalizeItemName', () => {
   it('should trim whitespace', () => {
@@ -30,5 +30,23 @@ describe('normalizeItemName', () => {
 
   it('should handle empty string after trim', () => {
     expect(normalizeItemName('   ')).toBe('');
+  });
+});
+
+describe('normalizePhone', () => {
+  it('should keep only digits', () => {
+    expect(normalizePhone('5511999999999')).toBe('5511999999999');
+  });
+
+  it('should remove spaces and dashes', () => {
+    expect(normalizePhone('55 11 99999-9999')).toBe('5511999999999');
+  });
+
+  it('should trim and remove non-digits', () => {
+    expect(normalizePhone('  +55 (11) 99999-9999  ')).toBe('5511999999999');
+  });
+
+  it('should return empty string when no digits', () => {
+    expect(normalizePhone('  + () -  ')).toBe('');
   });
 });
