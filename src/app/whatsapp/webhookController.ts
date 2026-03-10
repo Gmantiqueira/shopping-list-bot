@@ -37,7 +37,13 @@ interface WhatsAppWebhookEntry {
           id: string;
         };
       }>;
-      statuses?: Array<unknown>;
+      statuses?: Array<{
+        id: string;
+        recipient_id: string;
+        status: string;
+        timestamp: string;
+        errors?: Array<{ code: number; title: string; message?: string }>;
+      }>;
     };
   }>;
 }
@@ -107,8 +113,25 @@ export async function registerWhatsAppWebhook(
           for (const change of entry.changes) {
             const value = change.value;
 
-            if (value.statuses) {
-              console.log('[webhook] statuses ignorados (não processamos)');
+            if (value.statuses && value.statuses.length > 0) {
+              for (const s of value.statuses) {
+                const statusLog: Record<string, unknown> = {
+                  recipient_id: s.recipient_id,
+                  status: s.status,
+                  timestamp: s.timestamp,
+                  message_id: s.id,
+                };
+                if (s.errors && s.errors.length > 0) {
+                  statusLog.errors = s.errors;
+                  console.error(
+                    '[webhook] status de entrega (falha)',
+                    statusLog,
+                    s
+                  );
+                } else {
+                  console.log('[webhook] status de entrega', statusLog);
+                }
+              }
             }
 
             // Processa apenas mensagens recebidas (não status)
