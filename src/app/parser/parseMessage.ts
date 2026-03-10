@@ -7,7 +7,7 @@ import { extractItemsByRules } from './extractItemsByRules.js';
 import { shouldUseLLM } from './shouldUseLLM.js';
 import { extractItemsByLLM } from './extractItemsByLLM.js';
 import { normalizeItems } from './normalizeItems.js';
-import { applyLearnedAliases } from './applyLearnedAliases.js';
+import { applyLearnedAliasesToItems } from './applyLearnedAliases.js';
 import { parseItemText } from '../../domain/itemUtils.js';
 import { createMessageParseEventRepository } from '../../infra/messageParseEventFactory.js';
 import { computeItemConfidence } from './computeItemConfidence.js';
@@ -207,33 +207,23 @@ export async function parseMessage(input: ParseInput): Promise<ParseResult> {
     llmFailed,
   });
 
-  // 11. Aplicar aliases aprendidos por grupo
-  const aliasedItems = await applyLearnedAliases(
-    input.groupId,
-    normalizedItems
-  );
-  debugLog('Learned aliases applied', {
-    before: normalizedItems,
-    after: aliasedItems,
-  });
-
-  // 12. Deduplicar após aplicar aliases (pode ter criado duplicados)
+  // 11. Deduplicar strings de itens
   const seen = new Set<string>();
   const uniqueItems: string[] = [];
-  for (const item of aliasedItems) {
+  for (const item of normalizedItems) {
     if (!seen.has(item)) {
       seen.add(item);
       uniqueItems.push(item);
     }
   }
   debugLog('Items deduplicated', {
-    before: aliasedItems,
+    before: normalizedItems,
     after: uniqueItems,
   });
 
-  // 13. Se não houver itens, retornar IGNORE
+  // 12. Se não houver itens, retornar IGNORE
   if (uniqueItems.length === 0) {
-    debugLog('No items after alias application, returning IGNORE');
+    debugLog('No items after deduplication, returning IGNORE');
 
     // Salvar evento de parsing (não bloqueia o fluxo)
     saveParseEvent(input, {
@@ -249,10 +239,16 @@ export async function parseMessage(input: ParseInput): Promise<ParseResult> {
     return { type: 'IGNORE' };
   }
 
-  // 14. Converter strings para ShoppingItem
-  const shoppingItems: ShoppingItem[] = uniqueItems.map((itemText) =>
+  // 13. Converter strings para ShoppingItem
+  let shoppingItems: ShoppingItem[] = uniqueItems.map((itemText) =>
     parseItemText(itemText)
   );
+
+  // 14. Normalizar nomes usando aliases (ex.: "refri" -> "refrigerante", "coca" -> "coca cola")
+  shoppingItems = await applyLearnedAliasesToItems(input.groupId, shoppingItems);
+  debugLog('Item names normalized by aliases', {
+    items: shoppingItems.map((i) => i.name),
+  });
 
   const confidence = computeItemConfidence(trimmed, shoppingItems);
   debugLog('Final result', {
@@ -262,7 +258,7 @@ export async function parseMessage(input: ParseInput): Promise<ParseResult> {
     confidence,
   });
 
-  // 16. Salvar evento de parsing (não bloqueia o fluxo)
+  // 15. Salvar evento de parsing (não bloqueia o fluxo)
   saveParseEvent(input, {
     ruleItems,
     llmItems,

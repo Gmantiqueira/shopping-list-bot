@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { applyLearnedAliases } from '../../../src/app/parser/applyLearnedAliases.js';
+import {
+  applyLearnedAliases,
+  applyLearnedAliasesToItems,
+} from '../../../src/app/parser/applyLearnedAliases.js';
 import { createGroupItemAliasRepository } from '../../../src/infra/groupItemAliasFactory.js';
 
 // Mock do factory
@@ -171,5 +174,84 @@ describe('applyLearnedAliases', () => {
 
     // "refri" vira "coca-cola", "REFRI" permanece
     expect(result).toEqual(['coca-cola', 'REFRI']);
+  });
+});
+
+describe('applyLearnedAliasesToItems', () => {
+  let mockRepository: any;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRepository = {
+      findByGroupIdAndRawTerm: vi.fn(),
+    };
+  });
+
+  it('should normalize item name by alias (2 refri -> refrigerante)', async () => {
+    mockRepository.findByGroupIdAndRawTerm.mockResolvedValue({
+      id: 'a1',
+      groupId: 'g1',
+      rawTerm: 'refri',
+      canonicalItem: 'refrigerante',
+      source: 'manual',
+      usageCount: 1,
+      createdAt: new Date(),
+      lastSeenAt: new Date(),
+      updatedAt: new Date(),
+    });
+    vi.mocked(createGroupItemAliasRepository).mockReturnValue(mockRepository);
+
+    const result = await applyLearnedAliasesToItems('g1', [
+      { name: 'refri', quantity: 2, unit: 'un' },
+    ]);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('refrigerante');
+    expect(result[0].quantity).toBe(2);
+    expect(mockRepository.findByGroupIdAndRawTerm).toHaveBeenCalledWith(
+      'g1',
+      'refri'
+    );
+  });
+
+  it('should normalize 1 coca to canonical name', async () => {
+    mockRepository.findByGroupIdAndRawTerm.mockResolvedValue({
+      id: 'a1',
+      groupId: 'g1',
+      rawTerm: 'coca',
+      canonicalItem: 'coca cola',
+      source: 'manual',
+      usageCount: 1,
+      createdAt: new Date(),
+      lastSeenAt: new Date(),
+      updatedAt: new Date(),
+    });
+    vi.mocked(createGroupItemAliasRepository).mockReturnValue(mockRepository);
+
+    const result = await applyLearnedAliasesToItems('g1', [
+      { name: 'coca', quantity: 1, unit: 'un' },
+    ]);
+
+    expect(result[0].name).toBe('coca cola');
+  });
+
+  it('should keep item when no alias found', async () => {
+    mockRepository.findByGroupIdAndRawTerm.mockResolvedValue(null);
+    vi.mocked(createGroupItemAliasRepository).mockReturnValue(mockRepository);
+
+    const result = await applyLearnedAliasesToItems('g1', [
+      { name: 'arroz', quantity: 1, unit: 'un' },
+    ]);
+
+    expect(result[0].name).toBe('arroz');
+  });
+
+  it('should return items unchanged when repository is null', async () => {
+    vi.mocked(createGroupItemAliasRepository).mockReturnValue(null);
+
+    const items = [{ name: 'refri', quantity: 2, unit: 'un' }];
+    const result = await applyLearnedAliasesToItems('g1', items);
+
+    expect(result).toEqual(items);
   });
 });
