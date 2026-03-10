@@ -92,6 +92,32 @@ export class ItemFeedbackService {
   }
 
   /**
+   * Registra feedback de confirmação/rejeição de sugestão ambígua.
+   * accepted true = usuário confirmou (1/sim/ok); false = usuário cancelou (2/não/cancelar).
+   * predictedItemNames = itens que o parser sugeriu (nomes).
+   *
+   * Uso futuro do feedback: melhorar heurísticas (ex.: rawText confirmado pode subir score);
+   * enriquecer aliases (padrões rejeitados podem virar stopwords); ajustar score de confiança
+   * por grupo/usuário com base em taxa de aceitação.
+   */
+  async recordConfirmationFeedback(
+    groupId: string,
+    userId: string,
+    rawText: string,
+    accepted: boolean,
+    predictedItemNames: string[]
+  ): Promise<void> {
+    await this.save({
+      groupId,
+      userId,
+      rawText,
+      wrongItems: accepted ? undefined : predictedItemNames,
+      correctItems: accepted ? predictedItemNames : undefined,
+      feedbackType: accepted ? 'confirmation_accepted' : 'confirmation_rejected',
+    });
+  }
+
+  /**
    * Salva feedback genérico
    */
   private async save(input: CreateItemFeedbackInput): Promise<void> {

@@ -63,6 +63,15 @@ export class HttpMessageService {
           await deletePendingConfirmation(pending.id);
         } catch {}
         if (reParsed.type === 'ITEMS') {
+          await this.itemFeedbackService
+            .recordConfirmationFeedback(
+              groupId,
+              userId,
+              pending.rawText,
+              true,
+              reParsed.items.map((i) => i.name)
+            )
+            .catch((err) => console.warn('Failed to record confirmation feedback:', err));
           return await this.handleAddItems(
             groupId,
             userId,
@@ -73,6 +82,21 @@ export class HttpMessageService {
         }
       }
       if (['2', 'não', 'nao', 'cancelar'].includes(replyNorm)) {
+        const rejectInput = { ...input, text: pending.rawText };
+        const reParsed = await parseMessage(rejectInput);
+        const predictedNames =
+          reParsed.type === 'ITEMS'
+            ? reParsed.items.map((i) => i.name)
+            : [pending.rawText];
+        await this.itemFeedbackService
+          .recordConfirmationFeedback(
+            groupId,
+            userId,
+            pending.rawText,
+            false,
+            predictedNames
+          )
+          .catch((err) => console.warn('Failed to record rejection feedback:', err));
         try {
           await deletePendingConfirmation(pending.id);
         } catch {}

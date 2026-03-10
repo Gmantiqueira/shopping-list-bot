@@ -190,4 +190,52 @@ describe('ItemFeedbackService', () => {
       expect(call.correctItems).toEqual(['correct1', 'correct2']);
     });
   });
+
+  describe('recordConfirmationFeedback', () => {
+    it('should record positive feedback when accepted', async () => {
+      vi.mocked(createItemFeedbackRepository).mockReturnValue(mockRepository);
+
+      await service.recordConfirmationFeedback(
+        'g1',
+        'user1',
+        'arroz',
+        true,
+        ['arroz']
+      );
+
+      expect(mockRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          groupId: 'g1',
+          userId: 'user1',
+          rawText: 'arroz',
+          feedbackType: 'confirmation_accepted',
+          correctItems: ['arroz'],
+          wrongItems: undefined,
+        })
+      );
+    });
+
+    it('should record negative feedback when rejected', async () => {
+      vi.mocked(createItemFeedbackRepository).mockReturnValue(mockRepository);
+
+      await service.recordConfirmationFeedback(
+        'g1',
+        'user1',
+        'oi',
+        false,
+        ['oi']
+      );
+
+      expect(mockRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          groupId: 'g1',
+          userId: 'user1',
+          rawText: 'oi',
+          feedbackType: 'confirmation_rejected',
+          wrongItems: ['oi'],
+          correctItems: undefined,
+        })
+      );
+    });
+  });
 });

@@ -90,7 +90,7 @@ model ItemFeedback {
   rawText          String
   wrongItemsJson   String?
   correctItemsJson String?
-  feedbackType     String   // 'replace' | 'remove_false_positive' | 'add_missing_item' | 'alias_manual'
+  feedbackType     String   // 'replace' | 'remove_false_positive' | 'add_missing_item' | 'alias_manual' | 'confirmation_accepted' | 'confirmation_rejected'
   createdAt        DateTime @default(now())
 
   @@index([groupId])

@@ -79,7 +79,9 @@ export type ItemFeedbackType =
   | 'replace'
   | 'remove_false_positive'
   | 'add_missing_item'
-  | 'alias_manual';
+  | 'alias_manual'
+  | 'confirmation_accepted'
+  | 'confirmation_rejected';
 
 export interface ItemFeedback {
   id: string;
