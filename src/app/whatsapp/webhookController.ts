@@ -47,6 +47,15 @@ interface WhatsAppWebhookPayload {
   entry: WhatsAppWebhookEntry[];
 }
 
+const FIRST_CONTACT_MESSAGE = `Oi! Eu organizo sua lista de compras.
+Você pode me mandar itens como:
+2 arroz
+1 leite
+banana
+
+Se quiser, também pode me dizer seu nome com:
+meu nome é Gabriel`;
+
 export async function registerWhatsAppWebhook(
   app: FastifyInstance,
   repository: ListItemRepository
@@ -115,11 +124,11 @@ export async function registerWhatsAppWebhook(
                 )?.profile?.name;
 
                 let listId: string | undefined;
+                let isFirstContact = false;
                 try {
-                  const customer = await getOrCreateCustomerByPhone(
-                    phone,
-                    contactName
-                  );
+                  const { customer, created } =
+                    await getOrCreateCustomerByPhone(phone, contactName);
+                  isFirstContact = created;
                   const list = await getOrCreateOpenListForCustomer(
                     customer.id
                   );
@@ -142,6 +151,10 @@ export async function registerWhatsAppWebhook(
                 }
 
                 try {
+                  if (isFirstContact) {
+                    await messenger.sendMessage(groupId, FIRST_CONTACT_MESSAGE);
+                  }
+
                   const result = await messageService.handleMessage({
                     groupId,
                     userId,
@@ -149,7 +162,6 @@ export async function registerWhatsAppWebhook(
                     listId,
                   });
 
-                  // Envia resposta via Messenger
                   if (result.message) {
                     await messenger.sendMessage(groupId, result.message);
                   }
