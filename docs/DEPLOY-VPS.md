@@ -5,6 +5,21 @@ Recomenda-se executar na ordem indicada.
 
 ---
 
+## Script de deploy (recomendado)
+
+Na raiz do projeto:
+
+```bash
+chmod +x scripts/deploy.sh
+./scripts/deploy.sh
+```
+
+O script executa em sequência: `git pull`, `pnpm install`, `db:generate`, `prisma migrate deploy`, `build`, `pm2 restart`.  
+Se o processo no PM2 tiver outro nome, use: `PM2_APP_NAME=meu-app ./scripts/deploy.sh`.  
+Qualquer comando que falhar interrompe o script (`set -e`).
+
+---
+
 ## Pré-requisitos no servidor
 
 - Node.js 20+
