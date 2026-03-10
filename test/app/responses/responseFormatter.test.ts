@@ -11,6 +11,7 @@ describe('ResponseFormatter', () => {
         added: [
           {
             id: '1',
+            listId: 'list-1',
             groupId: 'g1',
             name: 'leite',
             quantity: 1,
@@ -32,6 +33,7 @@ describe('ResponseFormatter', () => {
         added: [
           {
             id: '1',
+            listId: 'list-1',
             groupId: 'g1',
             name: 'leite',
             quantity: 1,
@@ -42,6 +44,7 @@ describe('ResponseFormatter', () => {
           },
           {
             id: '2',
+            listId: 'list-1',
             groupId: 'g1',
             name: 'pão',
             quantity: 1,
@@ -63,6 +66,7 @@ describe('ResponseFormatter', () => {
         added: [
           {
             id: '1',
+            listId: 'list-1',
             groupId: 'g1',
             name: 'leite',
             quantity: 1,
@@ -95,6 +99,7 @@ describe('ResponseFormatter', () => {
       const result: AddItemsResult = {
         added: Array.from({ length: 10 }, (_, i) => ({
           id: `${i}`,
+          listId: 'list-1',
           groupId: 'g1',
           name: `item${i + 1}`,
           quantity: 1,
@@ -134,6 +139,7 @@ describe('ResponseFormatter', () => {
       const items: Item[] = [
         {
           id: '1',
+          listId: 'list-1',
           groupId: 'g1',
           name: 'leite',
           quantity: 1,
@@ -144,6 +150,7 @@ describe('ResponseFormatter', () => {
         },
         {
           id: '2',
+          listId: 'list-1',
           groupId: 'g1',
           name: 'pão',
           quantity: 1,
@@ -162,6 +169,7 @@ describe('ResponseFormatter', () => {
       const items: Item[] = [
         {
           id: '1',
+          listId: 'list-1',
           groupId: 'g1',
           name: 'leite',
           quantity: 1,
@@ -182,6 +190,7 @@ describe('ResponseFormatter', () => {
       const items: Item[] = [
         {
           id: '1',
+          listId: 'list-1',
           groupId: 'g1',
           name: 'leite',
           quantity: 1,
@@ -192,6 +201,7 @@ describe('ResponseFormatter', () => {
         },
         {
           id: '2',
+          listId: 'list-1',
           groupId: 'g1',
           name: 'pão',
           quantity: 1,
@@ -212,6 +222,7 @@ describe('ResponseFormatter', () => {
       const items: Item[] = [
         {
           id: '1',
+          listId: 'list-1',
           groupId: 'g1',
           name: 'leite',
           quantity: 1,

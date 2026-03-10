@@ -10,8 +10,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Customer {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lists     List[]
+}
+
+model List {
+  id         String   @id @default(uuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  groupId    String?  @unique // compatibilidade: uma lista por chat (groupId)
+  title      String?
+  status     String   @default("open")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  items      Item[]
+
+  @@index([customerId])
+}
+
 model Item {
   id        String   @id @default(uuid())
+  listId    String
+  list      List     @relation(fields: [listId], references: [id], onDelete: Cascade)
   groupId   String
   name      String
   quantity  Int      @default(1)
@@ -24,6 +49,7 @@ model Item {
 
   @@index([groupId])
   @@index([groupId, name])
+  @@index([listId])
 }
 
 model MessageParseEvent {

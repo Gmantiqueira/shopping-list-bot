@@ -14,6 +14,7 @@ export interface ShoppingItem {
  */
 export interface Item {
   id: string;
+  listId: string;
   groupId: string;
   name: string;
   quantity: number;
@@ -31,6 +32,7 @@ export interface AddItemsResult {
 }
 
 export interface ListItemRepository {
+  getOrCreateListId(groupId: string): Promise<string>;
   findByGroupId(groupId: string): Promise<Item[]>;
   findByGroupIdAndName(
     groupId: string,

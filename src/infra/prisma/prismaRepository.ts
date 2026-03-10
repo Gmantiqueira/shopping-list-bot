@@ -4,6 +4,24 @@ import type { Item, ListItemRepository } from '../../domain/types.js';
 export class PrismaListItemRepository implements ListItemRepository {
   private prisma = getPrismaClient();
 
+  async getOrCreateListId(groupId: string): Promise<string> {
+    const list = await this.prisma.list.findFirst({
+      where: { groupId },
+    });
+    if (list) return list.id;
+    const customer =
+      (await this.prisma.customer.findFirst({
+        where: { phone: 'legacy' },
+      })) ??
+      (await this.prisma.customer.create({
+        data: { phone: 'legacy', name: null },
+      }));
+    const newList = await this.prisma.list.create({
+      data: { customerId: customer.id, groupId },
+    });
+    return newList.id;
+  }
+
   async findByGroupId(groupId: string): Promise<Item[]> {
     const items = await this.prisma.item.findMany({
       where: { groupId },
@@ -40,6 +58,7 @@ export class PrismaListItemRepository implements ListItemRepository {
       },
       create: {
         id: item.id,
+        listId: item.listId,
         groupId: item.groupId,
         name: item.name,
         quantity: item.quantity,
@@ -69,6 +88,7 @@ export class PrismaListItemRepository implements ListItemRepository {
 
   private mapToDomain(item: {
     id: string;
+    listId: string;
     groupId: string;
     name: string;
     quantity: number;
@@ -81,6 +101,7 @@ export class PrismaListItemRepository implements ListItemRepository {
   }): Item {
     return {
       id: item.id,
+      listId: item.listId,
       groupId: item.groupId,
       name: item.name,
       quantity: item.quantity,

@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ListService } from '../../src/domain/listService.js';
 import { MemoryListItemRepository } from '../../src/infra/memory/memoryRepository.js';
-import type { ShoppingItem } from '../../src/domain/types.js';
 
 describe('ListService', () => {
   let service: ListService;

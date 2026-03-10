@@ -17,6 +17,8 @@ export class ListService {
     const added: Item[] = [];
     const duplicated: ShoppingItem[] = [];
 
+    const listId = await this.repository.getOrCreateListId(groupId);
+
     for (const shoppingItem of items) {
       const normalizedName = normalizeItemName(shoppingItem.name);
       const quantity = shoppingItem.quantity ?? 1;
@@ -36,6 +38,7 @@ export class ListService {
       // Cria novo item
       const newItem: Item = {
         id: crypto.randomUUID(),
+        listId,
         groupId,
         name: normalizedName,
         quantity,

@@ -3,6 +3,10 @@ import type { Item, ListItemRepository } from '../../domain/types.js';
 export class MemoryListItemRepository implements ListItemRepository {
   private items: Map<string, Item> = new Map();
 
+  async getOrCreateListId(groupId: string): Promise<string> {
+    return `mem-${groupId}`;
+  }
+
   async findByGroupId(groupId: string): Promise<Item[]> {
     return Array.from(this.items.values()).filter(
       (item) => item.groupId === groupId

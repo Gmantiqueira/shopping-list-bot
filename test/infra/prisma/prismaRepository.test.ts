@@ -7,8 +7,9 @@ describe('PrismaListItemRepository - Integration', () => {
   const prisma = getPrismaClient();
 
   beforeEach(async () => {
-    // Limpa o banco antes de cada teste
     await prisma.item.deleteMany();
+    await prisma.list.deleteMany();
+    await prisma.customer.deleteMany();
     repository = new PrismaListItemRepository();
   });
 
@@ -17,10 +18,14 @@ describe('PrismaListItemRepository - Integration', () => {
   });
 
   it('should save and find items by groupId', async () => {
+    const listId = await repository.getOrCreateListId('group1');
     const item = {
       id: 'test-1',
+      listId,
       groupId: 'group1',
       name: 'leite',
+      quantity: 1,
+      unit: 'un',
       status: 'pending' as const,
       createdBy: 'user1',
       createdAt: new Date(),
@@ -35,10 +40,14 @@ describe('PrismaListItemRepository - Integration', () => {
   });
 
   it('should find item by groupId and name', async () => {
+    const listId = await repository.getOrCreateListId('group1');
     const item = {
       id: 'test-2',
+      listId,
       groupId: 'group1',
       name: 'pão',
+      quantity: 1,
+      unit: 'un',
       status: 'pending' as const,
       createdBy: 'user1',
       createdAt: new Date(),
@@ -52,10 +61,14 @@ describe('PrismaListItemRepository - Integration', () => {
   });
 
   it('should update item when saving with same id', async () => {
+    const listId = await repository.getOrCreateListId('group1');
     const item = {
       id: 'test-3',
+      listId,
       groupId: 'group1',
       name: 'leite',
+      quantity: 1,
+      unit: 'un',
       status: 'pending' as const,
       createdBy: 'user1',
       createdAt: new Date(),
@@ -78,10 +91,14 @@ describe('PrismaListItemRepository - Integration', () => {
   });
 
   it('should delete item by id', async () => {
+    const listId = await repository.getOrCreateListId('group1');
     const item = {
       id: 'test-4',
+      listId,
       groupId: 'group1',
       name: 'manteiga',
+      quantity: 1,
+      unit: 'un',
       status: 'pending' as const,
       createdBy: 'user1',
       createdAt: new Date(),
@@ -95,10 +112,15 @@ describe('PrismaListItemRepository - Integration', () => {
   });
 
   it('should delete all items by groupId', async () => {
+    const listId1 = await repository.getOrCreateListId('group1');
+    const listId2 = await repository.getOrCreateListId('group2');
     await repository.save({
       id: 'test-5',
+      listId: listId1,
       groupId: 'group1',
       name: 'leite',
+      quantity: 1,
+      unit: 'un',
       status: 'pending' as const,
       createdBy: 'user1',
       createdAt: new Date(),
@@ -106,8 +128,11 @@ describe('PrismaListItemRepository - Integration', () => {
 
     await repository.save({
       id: 'test-6',
+      listId: listId1,
       groupId: 'group1',
       name: 'pão',
+      quantity: 1,
+      unit: 'un',
       status: 'pending' as const,
       createdBy: 'user1',
       createdAt: new Date(),
@@ -115,8 +140,11 @@ describe('PrismaListItemRepository - Integration', () => {
 
     await repository.save({
       id: 'test-7',
+      listId: listId2,
       groupId: 'group2',
       name: 'manteiga',
+      quantity: 1,
+      unit: 'un',
       status: 'pending' as const,
       createdBy: 'user1',
       createdAt: new Date(),
@@ -133,10 +161,15 @@ describe('PrismaListItemRepository - Integration', () => {
   });
 
   it('should isolate items by groupId', async () => {
+    const listId1 = await repository.getOrCreateListId('group1');
+    const listId2 = await repository.getOrCreateListId('group2');
     await repository.save({
       id: 'test-8',
+      listId: listId1,
       groupId: 'group1',
       name: 'leite',
+      quantity: 1,
+      unit: 'un',
       status: 'pending' as const,
       createdBy: 'user1',
       createdAt: new Date(),
@@ -144,8 +177,11 @@ describe('PrismaListItemRepository - Integration', () => {
 
     await repository.save({
       id: 'test-9',
+      listId: listId2,
       groupId: 'group2',
       name: 'leite',
+      quantity: 1,
+      unit: 'un',
       status: 'pending' as const,
       createdBy: 'user1',
       createdAt: new Date(),
