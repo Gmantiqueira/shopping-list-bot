@@ -36,30 +36,54 @@ export class WhatsAppSender implements Messenger {
 
   async sendMessage(groupId: string, message: string): Promise<void> {
     if (!this.config) {
-      throw new Error('WhatsApp sender not configured');
+      const err = new Error('WhatsApp sender not configured');
+      console.error('[WhatsAppSender] sendMessage failed:', err.message);
+      throw err;
     }
 
     const url = `${this.config.apiUrl}/${this.config.phoneNumberId}/messages`;
+    const to = groupId.replace(/\D/g, '');
+    const payload = {
+      messaging_product: 'whatsapp',
+      to,
+      type: 'text',
+      text: { body: message },
+    };
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.config.accessToken}`,
-      },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        to: groupId,
-        type: 'text',
-        text: {
-          body: message,
-        },
-      }),
+    console.log('[WhatsAppSender] enviando mensagem', {
+      to: payload.to,
+      bodyPreview: message.length > 60 ? `${message.slice(0, 60)}...` : message,
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`WhatsApp API error: ${response.status} - ${error}`);
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.config.accessToken}`,
+        },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.error('[WhatsAppSender] erro de rede ao chamar Meta:', err);
+      throw err;
     }
+
+    const responseText = await response.text();
+    if (!response.ok) {
+      console.error('[WhatsAppSender] resposta da Meta (erro)', {
+        status: response.status,
+        body: responseText,
+      });
+      throw new Error(
+        `WhatsApp API error: ${response.status} - ${responseText}`
+      );
+    }
+
+    console.log('[WhatsAppSender] mensagem enviada com sucesso', {
+      to: payload.to,
+      metaResponse: responseText.slice(0, 200),
+    });
   }
 }

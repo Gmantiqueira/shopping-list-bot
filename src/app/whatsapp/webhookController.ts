@@ -107,6 +107,10 @@ export async function registerWhatsAppWebhook(
           for (const change of entry.changes) {
             const value = change.value;
 
+            if (value.statuses) {
+              console.log('[webhook] statuses ignorados (não processamos)');
+            }
+
             // Processa apenas mensagens recebidas (não status)
             if (value.messaging_product === 'whatsapp' && value.messages) {
               for (const message of value.messages) {
@@ -117,11 +121,16 @@ export async function registerWhatsAppWebhook(
 
                 const groupId = message.from; // ID do chat = telefone no WhatsApp
                 const userId = message.from;
-                const text = message.text.body;
+                const text = message.text.body.trim();
                 const phone = message.from;
                 const contactName = value.contacts?.find(
                   (c) => c.wa_id === message.from
                 )?.profile?.name;
+
+                console.log('[webhook] mensagem recebida', {
+                  from: groupId,
+                  text: text.slice(0, 100),
+                });
 
                 let listId: string | undefined;
                 let isFirstContact = false;
@@ -146,13 +155,32 @@ export async function registerWhatsAppWebhook(
                 } catch (err) {
                   console.warn(
                     '[webhook] resolve customer/list failed, using fallback:',
-                    err instanceof Error ? err.message : err
+                    err instanceof Error ? err.message : err,
+                    err
                   );
                 }
 
+                const sendReply = async (replyText: string): Promise<void> => {
+                  console.log('[webhook] tentativa de envio', {
+                    destino: groupId,
+                    tamanho: replyText.length,
+                  });
+                  try {
+                    await messenger.sendMessage(groupId, replyText);
+                    console.log('[webhook] resposta enviada com sucesso');
+                  } catch (sendErr) {
+                    console.error(
+                      '[webhook] falha ao enviar resposta para Meta:',
+                      sendErr instanceof Error ? sendErr.message : sendErr,
+                      sendErr
+                    );
+                    throw sendErr;
+                  }
+                };
+
                 try {
                   if (isFirstContact) {
-                    await messenger.sendMessage(groupId, FIRST_CONTACT_MESSAGE);
+                    await sendReply(FIRST_CONTACT_MESSAGE);
                   }
 
                   const result = await messageService.handleMessage({
@@ -163,18 +191,29 @@ export async function registerWhatsAppWebhook(
                   });
 
                   if (result.message) {
-                    await messenger.sendMessage(groupId, result.message);
+                    await sendReply(result.message);
+                  } else {
+                    console.log(
+                      '[webhook] handleMessage não retornou mensagem (success=%s)',
+                      result.success
+                    );
                   }
                 } catch (error) {
-                  console.error('Error processing WhatsApp message:', error);
-                  // Envia mensagem de erro
+                  console.error(
+                    '[webhook] erro ao processar mensagem:',
+                    error instanceof Error ? error.message : error,
+                    error
+                  );
                   try {
-                    await messenger.sendMessage(
-                      groupId,
-                      '❌ Erro ao processar mensagem'
-                    );
+                    await sendReply('❌ Erro ao processar mensagem');
                   } catch (sendError) {
-                    console.error('Error sending error message:', sendError);
+                    console.error(
+                      '[webhook] falha ao enviar mensagem de erro:',
+                      sendError instanceof Error
+                        ? sendError.message
+                        : sendError,
+                      sendError
+                    );
                   }
                 }
               }
