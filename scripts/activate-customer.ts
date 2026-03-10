@@ -1,7 +1,7 @@
 /**
  * Ativa manualmente um cliente por telefone (para testes).
  * Uso: pnpm tsx scripts/activate-customer.ts 5511999999999
- * Requer DATABASE_URL no .env (ou ambiente).
+ * Requer DATABASE_URL no .env (ou ambiente). No VPS, rode antes: pnpm exec prisma generate
  */
 import 'dotenv/config';
 import { getOrCreateCustomerByPhone } from '../src/infra/prisma/customerRepository.js';
@@ -14,6 +14,13 @@ if (!phoneRaw?.trim()) {
 }
 
 const prisma = getPrismaClient();
+if (typeof prisma.customer?.findUnique !== 'function') {
+  console.error(
+    'Prisma Client desatualizado ou não gerado. Rode no diretório do projeto:'
+  );
+  console.error('  pnpm exec prisma generate');
+  process.exit(1);
+}
 
 try {
   const { customer, created } = await getOrCreateCustomerByPhone(phoneRaw);
