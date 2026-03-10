@@ -183,7 +183,7 @@ export async function registerWhatsAppWebhook(
         }
       }
 
-      return { status: 'ok' };
+      // Não retornar valor: a resposta já foi enviada acima; retornar objeto causaria FST_ERR_REP_ALREADY_SENT
     }
   );
 }
