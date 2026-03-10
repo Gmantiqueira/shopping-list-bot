@@ -118,4 +118,9 @@ export class ListService {
   async clearList(groupId: string): Promise<void> {
     await this.repository.deleteByGroupId(groupId);
   }
+
+  /** Marca a lista aberta do grupo como submitted. Itens permanecem; próxima adição cria nova lista. */
+  async finalizeList(groupId: string): Promise<boolean> {
+    return this.repository.finalizeListByGroupId(groupId);
+  }
 }

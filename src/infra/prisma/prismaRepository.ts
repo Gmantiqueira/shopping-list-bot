@@ -6,7 +6,7 @@ export class PrismaListItemRepository implements ListItemRepository {
 
   async getOrCreateListId(groupId: string): Promise<string> {
     const list = await this.prisma.list.findFirst({
-      where: { groupId },
+      where: { groupId, status: 'open' },
     });
     if (list) return list.id;
     const customer =
@@ -17,14 +17,28 @@ export class PrismaListItemRepository implements ListItemRepository {
         data: { phone: 'legacy', name: null },
       }));
     const newList = await this.prisma.list.create({
-      data: { customerId: customer.id, groupId },
+      data: { customerId: customer.id, groupId, status: 'open' },
     });
     return newList.id;
   }
 
+  async finalizeListByGroupId(groupId: string): Promise<boolean> {
+    const updated = await this.prisma.list.updateMany({
+      where: { groupId, status: 'open' },
+      data: { status: 'submitted' },
+    });
+    return updated.count > 0;
+  }
+
   async findByGroupId(groupId: string): Promise<Item[]> {
+    const openList = await this.prisma.list.findFirst({
+      where: { groupId, status: 'open' },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!openList) return [];
+
     const items = await this.prisma.item.findMany({
-      where: { groupId },
+      where: { listId: openList.id },
       orderBy: [{ createdAt: 'asc' }],
     });
 
@@ -35,13 +49,14 @@ export class PrismaListItemRepository implements ListItemRepository {
     groupId: string,
     normalizedName: string
   ): Promise<Item | null> {
-    const item = await this.prisma.item.findFirst({
-      where: {
-        groupId,
-        name: normalizedName,
-      },
+    const openList = await this.prisma.list.findFirst({
+      where: { groupId, status: 'open' },
+      orderBy: { createdAt: 'desc' },
     });
-
+    if (!openList) return null;
+    const item = await this.prisma.item.findFirst({
+      where: { listId: openList.id, name: normalizedName },
+    });
     return item ? this.mapToDomain(item) : null;
   }
 
@@ -81,8 +96,13 @@ export class PrismaListItemRepository implements ListItemRepository {
   }
 
   async deleteByGroupId(groupId: string): Promise<void> {
+    const openList = await this.prisma.list.findFirst({
+      where: { groupId, status: 'open' },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!openList) return;
     await this.prisma.item.deleteMany({
-      where: { groupId },
+      where: { listId: openList.id },
     });
   }
 

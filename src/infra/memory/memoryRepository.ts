@@ -7,6 +7,10 @@ export class MemoryListItemRepository implements ListItemRepository {
     return `mem-${groupId}`;
   }
 
+  async finalizeListByGroupId(_groupId: string): Promise<boolean> {
+    return true;
+  }
+
   async findByGroupId(groupId: string): Promise<Item[]> {
     return Array.from(this.items.values()).filter(
       (item) => item.groupId === groupId

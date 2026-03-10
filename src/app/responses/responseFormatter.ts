@@ -81,6 +81,27 @@ export class ResponseFormatter {
     return '🗑️ Lista limpa!';
   }
 
+  formatFinalizeSummary(items: Item[]): string {
+    if (items.length === 0) {
+      return '✔ Lista finalizada (estava vazia).';
+    }
+    const lines = items.map((i) =>
+      formatItem({ name: i.name, quantity: i.quantity, unit: i.unit })
+    );
+    return '✔ Pedido finalizado!\n\nResumo:\n' + lines.map((l) => `- ${l}`).join('\n');
+  }
+
+  formatSmallTalk(): string {
+    return (
+      'Oi! Me mande itens como:\n' +
+      '2 arroz\n' +
+      '1 leite\n' +
+      'banana\n\n' +
+      'Ou envie:\n' +
+      'ver lista'
+    );
+  }
+
   formatAliasesList(
     aliases: Array<{ rawTerm: string; canonicalItem: string }>
   ): string {

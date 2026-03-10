@@ -24,7 +24,7 @@ model List {
   id         String   @id @default(uuid())
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  groupId    String?  @unique // compatibilidade: uma lista por chat (groupId)
+  groupId    String?  // várias listas por grupo (open + submitted)
   title      String?
   status     String   @default("open")
   createdAt  DateTime @default(now())
@@ -32,6 +32,7 @@ model List {
   items      Item[]
 
   @@index([customerId])
+  @@index([groupId, status])
 }
 
 model Item {

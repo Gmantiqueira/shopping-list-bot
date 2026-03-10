@@ -33,6 +33,8 @@ export interface AddItemsResult {
 
 export interface ListItemRepository {
   getOrCreateListId(groupId: string): Promise<string>;
+  /** Marca a lista aberta do grupo como 'submitted'. Retorna true se havia lista open. */
+  finalizeListByGroupId(groupId: string): Promise<boolean>;
   findByGroupId(groupId: string): Promise<Item[]>;
   findByGroupIdAndName(
     groupId: string,

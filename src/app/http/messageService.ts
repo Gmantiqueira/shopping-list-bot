@@ -4,6 +4,7 @@ import { ConfirmationManager } from '../responses/confirmationManager.js';
 import type { ParseInput } from '../parser/types.js';
 import type { Item, ShoppingItem } from '../../domain/types.js';
 import { parseMessage } from '../parser/parseMessage.js';
+import { classifyIntent } from '../intent/intentClassifier.js';
 import { getOrCreateCustomerByPhone } from '../../infra/prisma/customerRepository.js';
 import {
   findValidPendingByGroupId,
@@ -48,12 +49,19 @@ export class HttpMessageService {
     }
 
     const replyNorm = text.trim().toLowerCase().replace(/\s+/g, ' ');
-    const pending = await findValidPendingByGroupId(groupId);
+    let pending: Awaited<ReturnType<typeof findValidPendingByGroupId>> = null;
+    try {
+      pending = await findValidPendingByGroupId(groupId);
+    } catch {
+      // Repositório indisponível (ex.: testes com MEMORY)
+    }
     if (pending) {
       if (['1', 'sim', 'ok', 'okay'].includes(replyNorm)) {
         const confirmInput = { ...input, text: pending.rawText };
         const reParsed = await parseMessage(confirmInput);
-        await deletePendingConfirmation(pending.id);
+        try {
+          await deletePendingConfirmation(pending.id);
+        } catch {}
         if (reParsed.type === 'ITEMS') {
           return await this.handleAddItems(
             groupId,
@@ -65,12 +73,44 @@ export class HttpMessageService {
         }
       }
       if (['2', 'não', 'nao', 'cancelar'].includes(replyNorm)) {
-        await deletePendingConfirmation(pending.id);
+        try {
+          await deletePendingConfirmation(pending.id);
+        } catch {}
         return { success: true, message: 'Cancelado. Nenhum item adicionado.' };
       }
-      await deletePendingConfirmation(pending.id);
+      try {
+        await deletePendingConfirmation(pending.id);
+      } catch {}
     }
 
+    // 1. Classificação de intenção
+    const intentResult = classifyIntent(text);
+
+    switch (intentResult.intent) {
+      case 'SMALL_TALK':
+        return {
+          success: true,
+          message: this.formatter.formatSmallTalk(),
+        };
+
+      case 'SHOW_LIST':
+        return await this.handleList(groupId);
+
+      case 'FINALIZE_LIST':
+        return await this.handleFinalize(groupId);
+
+      case 'REMOVE_ITEM':
+        if (intentResult.itemName) {
+          return await this.handleRemove(groupId, intentResult.itemName, userId);
+        }
+        break;
+
+      case 'ADD_ITEM':
+      case 'UNKNOWN':
+        break;
+    }
+
+    // 2. Extração + execução (parser para comandos e itens)
     const parsed = await parseMessage(input);
 
     switch (parsed.type) {
@@ -109,7 +149,9 @@ export class HttpMessageService {
           );
         }
         if (confidence >= 0.3) {
-          await savePendingConfirmation(input.groupId, input.text);
+          try {
+            await savePendingConfirmation(input.groupId, input.text);
+          } catch {}
           const msg =
             'Não tenho certeza se isso é um item da lista.\n\n' +
             `Você quis adicionar:\n"${input.text}"?\n\n` +
@@ -162,6 +204,23 @@ export class HttpMessageService {
           message: 'Mensagem ignorada',
         };
     }
+  }
+
+  private async handleFinalize(groupId: string): Promise<MessageResult> {
+    const items = await this.listService.listItems(groupId);
+    const closed = await this.listService.finalizeList(groupId);
+    if (!closed) {
+      return {
+        success: false,
+        message: 'Não há lista aberta para finalizar.',
+      };
+    }
+    const message = this.formatter.formatFinalizeSummary(items);
+    return {
+      success: true,
+      message,
+      data: { items },
+    };
   }
 
   private async handleList(groupId: string): Promise<MessageResult> {

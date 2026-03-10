@@ -31,7 +31,7 @@ describe('HTTP Routes', () => {
         payload: {
           groupId: 'group1',
           userId: 'user1',
-          text: 'leite',
+          text: '2 leite',
         },
       });
 
@@ -62,14 +62,13 @@ describe('HTTP Routes', () => {
     });
 
     it('should process COMMAND_LIST', async () => {
-      // Adiciona um item primeiro
       await app.inject({
         method: 'POST',
         url: '/webhook/mock',
         payload: {
           groupId: 'group1',
           userId: 'user1',
-          text: 'leite',
+          text: '2 leite',
         },
       });
 
@@ -92,14 +91,13 @@ describe('HTTP Routes', () => {
     });
 
     it('should process COMMAND_REMOVE', async () => {
-      // Adiciona um item primeiro
       await app.inject({
         method: 'POST',
         url: '/webhook/mock',
         payload: {
           groupId: 'group1',
           userId: 'user1',
-          text: 'leite',
+          text: '2 leite',
         },
       });
 
@@ -120,14 +118,13 @@ describe('HTTP Routes', () => {
     });
 
     it('should process COMMAND_BOUGHT', async () => {
-      // Adiciona um item primeiro
       await app.inject({
         method: 'POST',
         url: '/webhook/mock',
         payload: {
           groupId: 'group1',
           userId: 'user1',
-          text: 'leite',
+          text: '2 leite',
         },
       });
 
@@ -208,25 +205,23 @@ describe('HTTP Routes', () => {
     });
 
     it('should handle duplicate items', async () => {
-      // Adiciona item primeiro
       await app.inject({
         method: 'POST',
         url: '/webhook/mock',
         payload: {
           groupId: 'group1',
           userId: 'user1',
-          text: 'leite',
+          text: '2 leite',
         },
       });
 
-      // Tenta adicionar novamente
       const response = await app.inject({
         method: 'POST',
         url: '/webhook/mock',
         payload: {
           groupId: 'group1',
           userId: 'user1',
-          text: 'leite',
+          text: '2 leite',
         },
       });
 
@@ -295,14 +290,13 @@ describe('HTTP Routes', () => {
     });
 
     it('should return items with correct status', async () => {
-      // Adiciona e marca como comprado
       await app.inject({
         method: 'POST',
         url: '/webhook/mock',
         payload: {
           groupId: 'group1',
           userId: 'user1',
-          text: 'leite',
+          text: '2 leite',
         },
       });
 
@@ -322,7 +316,7 @@ describe('HTTP Routes', () => {
         payload: {
           groupId: 'group1',
           userId: 'user1',
-          text: 'pão',
+          text: '2 pão',
         },
       });
 
@@ -347,7 +341,7 @@ describe('HTTP Routes', () => {
         payload: {
           groupId: 'group1',
           userId: 'user1',
-          text: 'leite',
+          text: '2 leite',
         },
       });
 
@@ -357,7 +351,7 @@ describe('HTTP Routes', () => {
         payload: {
           groupId: 'group2',
           userId: 'user1',
-          text: 'pão',
+          text: '2 pão',
         },
       });
 
@@ -427,14 +421,13 @@ describe('HTTP Routes', () => {
     });
 
     it('should only clear specified group', async () => {
-      // Adiciona itens em dois grupos
       await app.inject({
         method: 'POST',
         url: '/webhook/mock',
         payload: {
           groupId: 'group1',
           userId: 'user1',
-          text: 'leite',
+          text: '2 leite',
         },
       });
 
@@ -444,7 +437,7 @@ describe('HTTP Routes', () => {
         payload: {
           groupId: 'group2',
           userId: 'user1',
-          text: 'pão',
+          text: '2 pão',
         },
       });
 
