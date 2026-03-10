@@ -140,26 +140,34 @@ describe('MessageParser', () => {
   describe('ITEMS - linha única', () => {
     it('should parse single word as ITEMS', () => {
       const result = parser.parse({ ...defaultInput, text: 'leite' });
-      expect(result).toEqual({ type: 'ITEMS', items: ['leite'] });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual(['leite']);
+      expect(result.confidence).toBe(0.7);
     });
 
     it('should parse short phrase (<= 60 chars) as ITEMS', () => {
       const text = 'leite integral desnatado';
       expect(text.length).toBeLessThanOrEqual(60);
       const result = parser.parse({ ...defaultInput, text });
-      expect(result).toEqual({ type: 'ITEMS', items: [text] });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual([text]);
+      expect(result.confidence).toBe(0.7);
     });
 
     it('should parse exactly 60 chars as ITEMS', () => {
       const text = 'a'.repeat(60);
       expect(text.length).toBe(60);
       const result = parser.parse({ ...defaultInput, text });
-      expect(result).toEqual({ type: 'ITEMS', items: [text] });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual([text]);
+      expect(result.confidence).toBe(0.7);
     });
 
     it('should trim spaces from single item', () => {
       const result = parser.parse({ ...defaultInput, text: '  leite  ' });
-      expect(result).toEqual({ type: 'ITEMS', items: ['leite'] });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual(['leite']);
+      expect(result.confidence).toBe(0.7);
     });
 
     it('should parse item with special characters', () => {
@@ -167,10 +175,11 @@ describe('MessageParser', () => {
         ...defaultInput,
         text: 'pão (francês) - integral',
       });
-      expect(result).toEqual({
-        type: 'ITEMS',
-        items: ['pão (francês) - integral'],
-      });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual([
+        'pão (francês) - integral',
+      ]);
+      expect(result.confidence).toBe(0.7);
     });
   });
 
@@ -180,7 +189,9 @@ describe('MessageParser', () => {
         ...defaultInput,
         text: 'leite\npão',
       });
-      expect(result).toEqual({ type: 'ITEMS', items: ['leite', 'pão'] });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual(['leite', 'pão']);
+      expect(result.confidence).toBe(0.7);
     });
 
     it('should parse three lines as ITEMS', () => {
@@ -188,10 +199,13 @@ describe('MessageParser', () => {
         ...defaultInput,
         text: 'leite\npão\nmanteiga',
       });
-      expect(result).toEqual({
-        type: 'ITEMS',
-        items: ['leite', 'pão', 'manteiga'],
-      });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual([
+        'leite',
+        'pão',
+        'manteiga',
+      ]);
+      expect(result.confidence).toBe(0.7);
     });
 
     it('should trim each line', () => {
@@ -199,10 +213,13 @@ describe('MessageParser', () => {
         ...defaultInput,
         text: '  leite  \n  pão  \n  manteiga  ',
       });
-      expect(result).toEqual({
-        type: 'ITEMS',
-        items: ['leite', 'pão', 'manteiga'],
-      });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual([
+        'leite',
+        'pão',
+        'manteiga',
+      ]);
+      expect(result.confidence).toBe(0.7);
     });
 
     it('should ignore empty lines', () => {
@@ -210,10 +227,13 @@ describe('MessageParser', () => {
         ...defaultInput,
         text: 'leite\n\npão\n\nmanteiga',
       });
-      expect(result).toEqual({
-        type: 'ITEMS',
-        items: ['leite', 'pão', 'manteiga'],
-      });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual([
+        'leite',
+        'pão',
+        'manteiga',
+      ]);
+      expect(result.confidence).toBe(0.7);
     });
 
     it('should handle lines with different lengths', () => {
@@ -221,10 +241,13 @@ describe('MessageParser', () => {
         ...defaultInput,
         text: 'leite\npão integral\nmanteiga',
       });
-      expect(result).toEqual({
-        type: 'ITEMS',
-        items: ['leite', 'pão integral', 'manteiga'],
-      });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual([
+        'leite',
+        'pão integral',
+        'manteiga',
+      ]);
+      expect(result.confidence).toBe(0.7);
     });
 
     it('should handle lines longer than 60 chars in multi-line', () => {
@@ -233,10 +256,9 @@ describe('MessageParser', () => {
         ...defaultInput,
         text: `leite\n${longLine}\npão`,
       });
-      expect(result).toEqual({
-        type: 'ITEMS',
-        items: ['leite', longLine, 'pão'],
-      });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual(['leite', longLine, 'pão']);
+      expect(result.confidence).toBe(0.7);
     });
   });
 
@@ -321,7 +343,9 @@ describe('MessageParser', () => {
         userId: 'custom-user',
       };
       const result = parser.parse(customInput);
-      expect(result).toEqual({ type: 'ITEMS', items: ['leite'] });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual(['leite']);
+      expect(result.confidence).toBe(0.7);
     });
   });
 

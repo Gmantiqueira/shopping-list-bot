@@ -53,6 +53,17 @@ model Item {
   @@index([listId])
 }
 
+model PendingItemConfirmation {
+  id         String   @id @default(cuid())
+  groupId    String
+  customerId String?
+  rawText    String
+  createdAt  DateTime @default(now())
+
+  @@index([groupId])
+  @@index([createdAt])
+}
+
 model MessageParseEvent {
   id             String   @id @default(cuid())
   groupId        String

@@ -10,6 +10,7 @@ import { normalizeItems } from './normalizeItems.js';
 import { applyLearnedAliases } from './applyLearnedAliases.js';
 import { parseItemText } from '../../domain/itemUtils.js';
 import { createMessageParseEventRepository } from '../../infra/messageParseEventFactory.js';
+import { computeItemConfidence } from './computeItemConfidence.js';
 
 /**
  * Verifica se debug está habilitado
@@ -253,11 +254,12 @@ export async function parseMessage(input: ParseInput): Promise<ParseResult> {
     parseItemText(itemText)
   );
 
-  // 15. Retornar ITEMS
+  const confidence = computeItemConfidence(trimmed, shoppingItems);
   debugLog('Final result', {
     type: 'ITEMS',
     items: shoppingItems,
     count: shoppingItems.length,
+    confidence,
   });
 
   // 16. Salvar evento de parsing (não bloqueia o fluxo)
@@ -271,7 +273,7 @@ export async function parseMessage(input: ParseInput): Promise<ParseResult> {
     console.warn('Failed to save parse event:', error);
   });
 
-  return { type: 'ITEMS', items: shoppingItems };
+  return { type: 'ITEMS', items: shoppingItems, confidence };
 }
 
 /**

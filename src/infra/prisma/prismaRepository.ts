@@ -58,7 +58,6 @@ export class PrismaListItemRepository implements ListItemRepository {
       },
       create: {
         id: item.id,
-        listId: item.listId,
         groupId: item.groupId,
         name: item.name,
         quantity: item.quantity,
@@ -68,6 +67,7 @@ export class PrismaListItemRepository implements ListItemRepository {
         createdAt: item.createdAt,
         boughtBy: item.boughtBy ?? null,
         boughtAt: item.boughtAt ?? null,
+        list: { connect: { id: item.listId } },
       },
     });
 

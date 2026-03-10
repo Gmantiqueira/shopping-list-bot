@@ -71,40 +71,53 @@ describe('parseMessage - integration tests', () => {
   describe('simple items', () => {
     it('should parse "leite" as ITEMS', async () => {
       const result = await parseMessage(createInput('leite'));
-      expect(result).toEqual({ type: 'ITEMS', items: ['leite'] });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual(['leite']);
+      expect(result.confidence).toBeDefined();
     });
 
     it('should normalize "leite" to lowercase', async () => {
       const result = await parseMessage(createInput('LEITE'));
-      expect(result).toEqual({ type: 'ITEMS', items: ['leite'] });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual(['leite']);
+      expect(result.confidence).toBeDefined();
     });
   });
 
   describe('comma-separated items', () => {
     it('should parse "leite, arroz, feijão" as ITEMS', async () => {
       const result = await parseMessage(createInput('leite, arroz, feijão'));
-      expect(result).toEqual({
-        type: 'ITEMS',
-        items: ['leite', 'arroz', 'feijão'],
-      });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual([
+        'leite',
+        'arroz',
+        'feijão',
+      ]);
+      expect(result.confidence).toBeDefined();
     });
 
     it('should normalize comma-separated items', async () => {
       const result = await parseMessage(createInput('LEITE, ARROZ, FEIJÃO'));
-      expect(result).toEqual({
-        type: 'ITEMS',
-        items: ['leite', 'arroz', 'feijão'],
-      });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual([
+        'leite',
+        'arroz',
+        'feijão',
+      ]);
+      expect(result.confidence).toBeDefined();
     });
   });
 
   describe('multi-line items', () => {
     it('should parse "leite\\narroz\\nfeijão" as ITEMS', async () => {
       const result = await parseMessage(createInput('leite\narroz\nfeijão'));
-      expect(result).toEqual({
-        type: 'ITEMS',
-        items: ['leite', 'arroz', 'feijão'],
-      });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual([
+        'leite',
+        'arroz',
+        'feijão',
+      ]);
+      expect(result.confidence).toBeDefined();
     });
   });
 
@@ -121,10 +134,13 @@ describe('parseMessage - integration tests', () => {
       ]);
 
       const result = await parseMessage(createInput('leite maçã coca-cola'));
-      expect(result).toEqual({
-        type: 'ITEMS',
-        items: ['leite', 'maçã', 'coca-cola'],
-      });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual([
+        'leite',
+        'maçã',
+        'coca-cola',
+      ]);
+      expect(result.confidence).toBeDefined();
       expect(extractItemsByLLM).toHaveBeenCalledWith('leite maçã coca-cola');
     });
 
@@ -176,17 +192,23 @@ describe('parseMessage - integration tests', () => {
   describe('normalization', () => {
     it('should apply aliases (coca -> coca-cola)', async () => {
       const result = await parseMessage(createInput('coca'));
-      expect(result).toEqual({ type: 'ITEMS', items: ['coca-cola'] });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual(['coca-cola']);
+      expect(result.confidence).toBeDefined();
     });
 
     it('should normalize duplicates', async () => {
       const result = await parseMessage(createInput('leite, leite, LEITE'));
-      expect(result).toEqual({ type: 'ITEMS', items: ['leite'] });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual(['leite']);
+      expect(result.confidence).toBeDefined();
     });
 
     it('should normalize "papel higienico" to "papel higiênico"', async () => {
       const result = await parseMessage(createInput('papel higienico'));
-      expect(result).toEqual({ type: 'ITEMS', items: ['papel higiênico'] });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual(['papel higiênico']);
+      expect(result.confidence).toBeDefined();
     });
   });
 
@@ -242,20 +264,24 @@ describe('parseMessage - integration tests', () => {
   describe('connector-based extraction', () => {
     it('should parse "leite e arroz e maçã"', async () => {
       const result = await parseMessage(createInput('leite e arroz e maçã'));
-      expect(result).toEqual({
-        type: 'ITEMS',
-        items: ['leite', 'arroz', 'maçã'],
-      });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items.map((i) => i.name)).toEqual([
+        'leite',
+        'arroz',
+        'maçã',
+      ]);
+      expect(result.confidence).toBeDefined();
     });
 
     it('should parse "2kg batata e 3 coca"', async () => {
       const result = await parseMessage(createInput('2kg batata e 3 coca'));
-      // O alias "coca" só funciona quando o item inteiro é "coca"
-      // "3 coca" não será normalizado para "3 coca-cola" automaticamente
-      expect(result).toEqual({
-        type: 'ITEMS',
-        items: ['2kg batata', '3 coca'],
-      });
+      expect(result.type).toBe('ITEMS');
+      expect(result.items[0].name).toBe('batata');
+      expect(result.items[0].quantity).toBe(2);
+      expect(result.items[0].unit).toBe('kg');
+      expect(result.items[1].name).toBe('coca');
+      expect(result.items[1].quantity).toBe(3);
+      expect(result.confidence).toBeDefined();
     });
   });
 });

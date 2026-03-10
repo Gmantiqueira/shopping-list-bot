@@ -5,6 +5,11 @@ import type { ParseInput } from '../parser/types.js';
 import type { Item, ShoppingItem } from '../../domain/types.js';
 import { parseMessage } from '../parser/parseMessage.js';
 import { getOrCreateCustomerByPhone } from '../../infra/prisma/customerRepository.js';
+import {
+  findValidPendingByGroupId,
+  savePendingConfirmation,
+  deletePendingConfirmation,
+} from '../../infra/prisma/pendingItemConfirmationRepository.js';
 import { AliasLearningService } from '../alias/aliasLearningService.js';
 import { ItemFeedbackService } from '../feedback/itemFeedbackService.js';
 import { ImplicitCorrectionService } from '../feedback/implicitCorrectionService.js';
@@ -42,6 +47,30 @@ export class HttpMessageService {
       return await this.executeClear(groupId);
     }
 
+    const replyNorm = text.trim().toLowerCase().replace(/\s+/g, ' ');
+    const pending = await findValidPendingByGroupId(groupId);
+    if (pending) {
+      if (['1', 'sim', 'ok', 'okay'].includes(replyNorm)) {
+        const confirmInput = { ...input, text: pending.rawText };
+        const reParsed = await parseMessage(confirmInput);
+        await deletePendingConfirmation(pending.id);
+        if (reParsed.type === 'ITEMS') {
+          return await this.handleAddItems(
+            groupId,
+            userId,
+            reParsed.items,
+            pending.rawText,
+            input.listId
+          );
+        }
+      }
+      if (['2', 'não', 'nao', 'cancelar'].includes(replyNorm)) {
+        await deletePendingConfirmation(pending.id);
+        return { success: true, message: 'Cancelado. Nenhum item adicionado.' };
+      }
+      await deletePendingConfirmation(pending.id);
+    }
+
     const parsed = await parseMessage(input);
 
     switch (parsed.type) {
@@ -68,14 +97,31 @@ export class HttpMessageService {
       case 'COMMAND_LIST_ALIASES':
         return await this.handleListAliases(input.groupId);
 
-      case 'ITEMS':
-        return await this.handleAddItems(
-          input.groupId,
-          input.userId,
-          parsed.items,
-          input.text,
-          input.listId
-        );
+      case 'ITEMS': {
+        const { confidence } = parsed;
+        if (confidence >= 0.7) {
+          return await this.handleAddItems(
+            input.groupId,
+            input.userId,
+            parsed.items,
+            input.text,
+            input.listId
+          );
+        }
+        if (confidence >= 0.3) {
+          await savePendingConfirmation(input.groupId, input.text);
+          const msg =
+            'Não tenho certeza se isso é um item da lista.\n\n' +
+            `Você quis adicionar:\n"${input.text}"?\n\n` +
+            'Responda:\n1 para confirmar\n2 para cancelar';
+          return { success: false, message: msg };
+        }
+        return {
+          success: false,
+          message:
+            'Não entendi como item de lista. Envie algo como: 2 arroz, leite, ou pão.',
+        };
+      }
 
       case 'NAME_REGISTRATION':
         await getOrCreateCustomerByPhone(input.groupId, parsed.name);

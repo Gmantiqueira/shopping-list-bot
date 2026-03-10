@@ -55,13 +55,13 @@ export class MessageParser {
     // Se tiver múltiplas linhas, cada linha vira um item
     if (lines.length > 1) {
       const items: ShoppingItem[] = lines.map((line) => parseItemText(line));
-      return { type: 'ITEMS', items };
+      return { type: 'ITEMS', items, confidence: 0.7 };
     }
 
     // Se for 1 linha curta (até 60 chars) vira item único
     if (lines.length === 1 && lines[0].length <= 60) {
       const items: ShoppingItem[] = [parseItemText(lines[0])];
-      return { type: 'ITEMS', items };
+      return { type: 'ITEMS', items, confidence: 0.7 };
     }
 
     // Linha única muito longa (> 60 e <= 120) -> IGNORE

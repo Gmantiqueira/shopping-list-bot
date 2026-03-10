@@ -37,9 +37,9 @@ describe('Real-world WhatsApp shopping messages', () => {
 
       const result = await parseMessage(createInput('leite maçã coca-cola'));
       expect(result.type).toBe('ITEMS');
-      expect(result.items).toContain('leite');
-      expect(result.items).toContain('maçã');
-      expect(result.items).toContain('coca-cola');
+      expect(result.items.map((i) => i.name)).toContain('leite');
+      expect(result.items.map((i) => i.name)).toContain('maçã');
+      expect(result.items.map((i) => i.name)).toContain('coca-cola');
     });
 
     it('should parse "acabou o leite e pega pão também"', async () => {
@@ -81,7 +81,7 @@ describe('Real-world WhatsApp shopping messages', () => {
     it('should parse "café"', async () => {
       const result = await parseMessage(createInput('café'));
       expect(result.type).toBe('ITEMS');
-      expect(result.items).toContain('café');
+      expect(result.items.map((i) => i.name)).toContain('café');
     });
 
     it('should parse "ração do gato"', async () => {
@@ -273,13 +273,13 @@ describe('Real-world WhatsApp shopping messages', () => {
     it('should parse "coca cola" and normalize to "coca-cola"', async () => {
       const result = await parseMessage(createInput('coca cola'));
       expect(result.type).toBe('ITEMS');
-      expect(result.items).toContain('coca-cola');
+      expect(result.items.map((i) => i.name)).toContain('coca-cola');
     });
 
     it('should parse "coca" and normalize to "coca-cola"', async () => {
       const result = await parseMessage(createInput('coca'));
       expect(result.type).toBe('ITEMS');
-      expect(result.items).toContain('coca-cola');
+      expect(result.items.map((i) => i.name)).toContain('coca-cola');
     });
 
     it('should handle "preciso de leite"', async () => {
