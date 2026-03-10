@@ -12,12 +12,14 @@ export class ListService {
   async addItems(
     groupId: string,
     userId: string,
-    items: ShoppingItem[]
+    items: ShoppingItem[],
+    listId?: string
   ): Promise<AddItemsResult> {
     const added: Item[] = [];
     const duplicated: ShoppingItem[] = [];
 
-    const listId = await this.repository.getOrCreateListId(groupId);
+    const resolvedListId =
+      listId ?? (await this.repository.getOrCreateListId(groupId));
 
     for (const shoppingItem of items) {
       const normalizedName = normalizeItemName(shoppingItem.name);
@@ -38,7 +40,7 @@ export class ListService {
       // Cria novo item
       const newItem: Item = {
         id: crypto.randomUUID(),
-        listId,
+        listId: resolvedListId,
         groupId,
         name: normalizedName,
         quantity,

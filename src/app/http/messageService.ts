@@ -72,7 +72,8 @@ export class HttpMessageService {
           input.groupId,
           input.userId,
           parsed.items,
-          input.text
+          input.text,
+          input.listId
         );
 
       case 'ALIAS_LEARN':
@@ -187,9 +188,15 @@ export class HttpMessageService {
     groupId: string,
     userId: string,
     items: ShoppingItem[],
-    rawText: string
+    rawText: string,
+    listId?: string
   ): Promise<MessageResult> {
-    const result = await this.listService.addItems(groupId, userId, items);
+    const result = await this.listService.addItems(
+      groupId,
+      userId,
+      items,
+      listId
+    );
 
     // Verifica se há correção implícita (remove seguido de add)
     if (result.added.length > 0) {

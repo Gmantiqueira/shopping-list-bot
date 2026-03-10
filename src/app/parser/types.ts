@@ -4,6 +4,8 @@ export interface ParseInput {
   text: string;
   groupId: string;
   userId: string;
+  /** Quando informado, itens são persistidos nesta lista (fluxo customer+list). */
+  listId?: string;
 }
 
 export type ParseResult =

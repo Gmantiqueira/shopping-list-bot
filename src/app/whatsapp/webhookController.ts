@@ -4,6 +4,11 @@ import { HttpMessageService } from '../http/messageService.js';
 import { createMessenger } from '../../infra/messenger/messengerFactory.js';
 import { WhatsAppSender } from '../../infra/messenger/whatsappSender.js';
 import type { ListItemRepository } from '../../domain/types.js';
+import { getOrCreateCustomerByPhone } from '../../infra/prisma/customerRepository.js';
+import {
+  getOrCreateOpenListForCustomer,
+  ensureListGroupId,
+} from '../../infra/prisma/listRepository.js';
 
 interface WhatsAppWebhookEntry {
   id: string;
@@ -101,15 +106,47 @@ export async function registerWhatsAppWebhook(
                   continue;
                 }
 
-                const groupId = message.from; // WhatsApp usa "from" como ID do chat
-                const userId = message.from; // Por enquanto, usar from como userId também
+                const groupId = message.from; // ID do chat = telefone no WhatsApp
+                const userId = message.from;
                 const text = message.text.body;
+                const phone = message.from;
+                const contactName = value.contacts?.find(
+                  (c) => c.wa_id === message.from
+                )?.profile?.name;
+
+                let listId: string | undefined;
+                try {
+                  const customer = await getOrCreateCustomerByPhone(
+                    phone,
+                    contactName
+                  );
+                  const list = await getOrCreateOpenListForCustomer(
+                    customer.id
+                  );
+                  await ensureListGroupId(list.id, groupId);
+                  listId = list.id;
+                  if (contactName) {
+                    console.log(
+                      '[webhook] customer',
+                      customer.id,
+                      'list',
+                      list.id,
+                      `(${contactName})`
+                    );
+                  }
+                } catch (err) {
+                  console.warn(
+                    '[webhook] resolve customer/list failed, using fallback:',
+                    err instanceof Error ? err.message : err
+                  );
+                }
 
                 try {
                   const result = await messageService.handleMessage({
                     groupId,
                     userId,
                     text,
+                    listId,
                   });
 
                   // Envia resposta via Messenger

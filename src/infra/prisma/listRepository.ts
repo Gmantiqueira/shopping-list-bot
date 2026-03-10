@@ -34,3 +34,18 @@ export async function getOrCreateOpenListForCustomer(
     },
   });
 }
+
+/**
+ * Associa a lista ao chat (groupId) quando ainda não estiver definido.
+ * Permite que listItems/addItems por groupId encontrem a mesma lista.
+ */
+export async function ensureListGroupId(
+  listId: string,
+  groupId: string
+): Promise<void> {
+  const prisma = getPrismaClient();
+  await prisma.list.updateMany({
+    where: { id: listId, groupId: null },
+    data: { groupId },
+  });
+}
