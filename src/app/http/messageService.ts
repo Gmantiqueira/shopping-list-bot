@@ -4,6 +4,7 @@ import { ConfirmationManager } from '../responses/confirmationManager.js';
 import type { ParseInput } from '../parser/types.js';
 import type { Item, ShoppingItem } from '../../domain/types.js';
 import { parseMessage } from '../parser/parseMessage.js';
+import { getOrCreateCustomerByPhone } from '../../infra/prisma/customerRepository.js';
 import { AliasLearningService } from '../alias/aliasLearningService.js';
 import { ItemFeedbackService } from '../feedback/itemFeedbackService.js';
 import { ImplicitCorrectionService } from '../feedback/implicitCorrectionService.js';
@@ -75,6 +76,13 @@ export class HttpMessageService {
           input.text,
           input.listId
         );
+
+      case 'NAME_REGISTRATION':
+        await getOrCreateCustomerByPhone(input.groupId, parsed.name);
+        return {
+          success: true,
+          message: `✔ Nome atualizado: ${parsed.name}`,
+        };
 
       case 'ALIAS_LEARN':
         // Salvar alias aprendido

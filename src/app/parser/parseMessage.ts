@@ -1,6 +1,7 @@
 import type { ParseInput, ParseResult } from './types.js';
 import type { ShoppingItem } from '../../domain/types.js';
 import { detectAliasLearning } from './detectAliasLearning.js';
+import { detectNameRegistration } from './detectNameRegistration.js';
 import { classifyMessage } from './classifyMessage.js';
 import { extractItemsByRules } from './extractItemsByRules.js';
 import { shouldUseLLM } from './shouldUseLLM.js';
@@ -110,7 +111,13 @@ export async function parseMessage(input: ParseInput): Promise<ParseResult> {
     return { type: 'IGNORE' };
   }
 
-  // 3. Detectar aprendizado de alias (antes de comandos normais)
+  // 3. Detectar cadastro de nome (antes de alias e parser de itens)
+  const nameForRegistration = detectNameRegistration(trimmed);
+  if (nameForRegistration) {
+    return { type: 'NAME_REGISTRATION', name: nameForRegistration };
+  }
+
+  // 4. Detectar aprendizado de alias (antes de comandos normais)
   const aliasLearning = detectAliasLearning(trimmed);
   if (aliasLearning) {
     return {
@@ -120,14 +127,14 @@ export async function parseMessage(input: ParseInput): Promise<ParseResult> {
     };
   }
 
-  // 4. Detectar comando
+  // 5. Detectar comando
   const command = detectCommand(trimmed);
   if (command) {
     // Comandos não são salvos como eventos de parsing
     return command;
   }
 
-  // 5. Classificar intenção
+  // 6. Classificar intenção
   const intent = classifyMessage(trimmed);
   debugLog('Intent classified', { intent, text: trimmed });
 

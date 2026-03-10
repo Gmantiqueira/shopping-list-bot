@@ -15,5 +15,6 @@ export type ParseResult =
   | { type: 'COMMAND_BOUGHT'; name: string }
   | { type: 'COMMAND_LIST_ALIASES' }
   | { type: 'ALIAS_LEARN'; raw: string; canonical: string }
+  | { type: 'NAME_REGISTRATION'; name: string }
   | { type: 'ITEMS'; items: ShoppingItem[] }
   | { type: 'IGNORE' };

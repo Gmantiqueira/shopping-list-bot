@@ -26,6 +26,21 @@ describe('parseMessage - integration tests', () => {
     userId: 'test-user',
   });
 
+  describe('name registration (precedência antes de comandos e itens)', () => {
+    it('should parse "meu nome é João" as NAME_REGISTRATION', async () => {
+      const result = await parseMessage(createInput('meu nome é João'));
+      expect(result).toEqual({ type: 'NAME_REGISTRATION', name: 'João' });
+    });
+    it('should parse "cadastrar nome Maria" as NAME_REGISTRATION', async () => {
+      const result = await parseMessage(createInput('cadastrar nome Maria'));
+      expect(result).toEqual({ type: 'NAME_REGISTRATION', name: 'Maria' });
+    });
+    it('should parse "sou Pedro" as NAME_REGISTRATION', async () => {
+      const result = await parseMessage(createInput('sou Pedro'));
+      expect(result).toEqual({ type: 'NAME_REGISTRATION', name: 'Pedro' });
+    });
+  });
+
   describe('commands', () => {
     it('should parse "lista" as COMMAND_LIST', async () => {
       const result = await parseMessage(createInput('lista'));
